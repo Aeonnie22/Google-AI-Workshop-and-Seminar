@@ -1,0 +1,6 @@
+{
+  "name": "QuadFlow",
+  "description": "Unified high-velocity operational workspace for Philippine student organizations synchronizing task coordination, academic risk balancing, and budget compliance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

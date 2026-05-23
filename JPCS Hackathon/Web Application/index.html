@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuadFlow — High Velocity Operational Command</title>
+    <!-- Modern Typography: Plus Jakarta Sans for UI, JetBrains Mono for system codes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Toast Notification Anchor -->
+    <div id="toastContainer" class="toast-container"></div>
+    <!-- Modal: Task Editor Drawer -->
+    <div id="taskModal" class="modal-overlay">
+        <div class="modal-box card-blur">
+            <div class="modal-header">
+                <h3>✏️ Edit Committee Deliverable</h3>
+                <button class="btn-close" id="closeTaskModalBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm">
+                    <input type="hidden" id="editTaskId">
+                    <div class="form-group">
+                        <label for="editTaskTitle">Deliverable Title</label>
+                        <input type="text" id="editTaskTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <label for="editTaskCommittee">Committee</label>
+                            <select id="editTaskCommittee" class="form-control">
+                                <option value="Logistics">Logistics</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Sponsorship">Sponsorship</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="editTaskStatus">Kanban Column</label>
+                            <select id="editTaskStatus" class="form-control">
+                                <option value="backlog">Backlog</option>
+                                <option value="progress">In Progress</option>
+                                <option value="blocked">Academic Blocked</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="editTaskAcademicRisk">
+                        <label for="editTaskAcademicRisk">⚠️ Mark as Academic Risk (Tied to critical coursework/exams)</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="deleteTaskBtn" class="btn btn-danger">🗑️ Delete Task</button>
+                        <div class="footer-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelTaskModalBtn">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Receipt Viewer -->
+    <div id="receiptModal" class="modal-overlay">
+        <div class="modal-box receipt-box card-blur">
+            <div class="modal-header">
+                <h3>📜 Verified Transaction Voucher</h3>
+                <button class="btn-close" id="closeReceiptModalBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body receipt-layout">
+                <div id="receiptTicket" class="receipt-ticket">
+                    <!-- Dynamic Receipt Generated Here -->
+                </div>
+                <div class="receipt-actions">
+                    <button id="printReceiptBtn" class="btn btn-secondary btn-block">🖨️ Print Voucher</button>
+                    <button id="closeReceiptBtn" class="btn btn-primary btn-block">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- System Bar (Top Header) -->
+    <header class="system-bar">
+        <div class="logo-area">
+            <div class="emblem">
+                <div class="emblem-inner"></div>
+            </div>
+            <h1 class="brand">QUAD<span class="brand-flow">FLOW</span></h1>
+            <span class="badge badge-system">v2.1 Pro</span>
+        </div>
+        
+        <div class="system-controls">
+            <button id="hellWeekToggle" class="btn btn-toggle-mode" title="Toggle intense tracking styling for academic pressure times">
+                <span class="pulse-indicator"></span>
+                <span>HELL WEEK MODE: <strong id="toggleStatus">OFF</strong></span>
+            </button>
+            
+            <div class="session-handler">
+                <label for="roleSelector">Access Key:</label>
+                <div class="select-wrapper">
+                    <select id="roleSelector" class="form-control select-dark">
+                        <option value="officer">🔑 Committee Officer</option>
+                        <option value="admin">💎 Executive Board (Admin)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Master Application Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-menu-wrapper">
+                <ul class="nav-links">
+                    <li>
+                        <a href="#dashboard" class="nav-item active" data-target="dashboard-section">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#kanban" class="nav-item" data-target="kanban-section">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                            <span>Operational Board</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#receipts" class="nav-item" data-target="receipts-section">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <span>Cash & Receipts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#vault" class="nav-item" data-target="vault-section">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <span>Heritage Vault</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="avatar-circle">EB</div>
+                    <div class="profile-info">
+                        <span class="profile-label">Identity Context</span>
+                        <strong id="currentRoleDisplay" class="profile-name">Committee Officer</strong>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <!-- Main Dynamic Viewport -->
+        <main class="main-content">
+            
+            <!-- SECTION 1: DASHBOARD -->
+            <section id="dashboard-section" class="view-section active">
+                <div class="section-header">
+                    <div>
+                        <h2>Operational Dashboard</h2>
+                        <p class="subtitle">Real-time workspace heartbeat, digital ledger metrics, and institutional deadlines.</p>
+                    </div>
+                    <div class="date-badge" id="liveDateDisplay">May 23, 2026</div>
+                </div>
+                <!-- Metrics Grid featuring circular analytics -->
+                <div class="metrics-grid">
+                    <div class="metric-card budget-card">
+                        <div class="metric-info">
+                            <h3>Remaining Budget</h3>
+                            <p class="metric-value text-lime" id="dashBudget">₱50,000.00</p>
+                            <span class="metric-sub" id="dashBudgetDetails">Spent: ₱0.00 of ₱50,000.00</span>
+                        </div>
+                        <div class="metric-visual">
+                            <!-- Circular Progress Bar -->
+                            <svg width="80" height="80" viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="budgetCircleProgress" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <text x="18" y="20.35" class="percentage" id="budgetPercentText">0%</text>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card linkable-card" data-target="receipts-section">
+                        <div class="metric-info">
+                            <h3>Verified Disbursements</h3>
+                            <p class="metric-value" id="dashPendingReceipts">0 Logs</p>
+                            <span class="metric-sub">Synced live with internal audits</span>
+                        </div>
+                        <div class="metric-icon-wrap">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card linkable-card" data-target="kanban-section">
+                        <div class="metric-info">
+                            <h3>Active Workspace Tracks</h3>
+                            <p class="metric-value text-canary" id="dashActiveTasks">0 Tasks</p>
+                            <span class="metric-sub" id="dashAcademicRiskSub">0 Flagged as Academic Risk</span>
+                        </div>
+                        <div class="metric-icon-wrap">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lower Layout Panels -->
+                <div class="dashboard-details-grid">
+                    
+                    <!-- Left Panel: Deadlines -->
+                    <div class="dashboard-panel">
+                        <div class="panel-header">
+                            <h3>⚠️ Immediate Institutional Deadlines (OSA Compliance)</h3>
+                            <span class="panel-action-label">OSA Tracking API Active</span>
+                        </div>
+                        <ul class="compliance-list">
+                            <li class="compliance-item danger">
+                                <div class="compliance-badge">URGENT</div>
+                                <div class="details">
+                                    <strong>Alternative Class Learning Option (ACLO) Project Proposal</strong>
+                                    <small>Mandatory approval workflow to Office of Student Affairs</small>
+                                </div>
+                                <div class="countdown" data-days="2">2 Days Left</div>
+                            </li>
+                            <li class="compliance-item warning">
+                                <div class="compliance-badge">PENDING</div>
+                                <div class="details">
+                                    <strong>Year-End Financial Audits (Term 2)</strong>
+                                    <small>Due to University Commission on Elections</small>
+                                </div>
+                                <div class="countdown" data-days="7">7 Days Left</div>
+                            </li>
+                            <li class="compliance-item info">
+                                <div class="compliance-badge">ROUTINE</div>
+                                <div class="details">
+                                    <strong>Sports Center Arena Physical Processing Forms</strong>
+                                    <small>Logistics room reservation & equipment clearances</small>
+                                </div>
+                                <div class="countdown" data-days="14">14 Days Left</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Right Panel: Quick Activity / State Overview -->
+                    <div class="dashboard-panel panel-system-status">
+                        <div class="panel-header">
+                            <h3>⚡ Command System Diagnostics</h3>
+                        </div>
+                        <div class="diagnostics-log">
+                            <div class="diag-row">
+                                <span class="diag-label">Hell Week State Priority:</span>
+                                <span id="diagHellWeekStatus" class="diag-value">Inactive (Normal Load)</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-label">Verification Integrity:</span>
+                                <span class="diag-value text-lime">100% Secure (SSL)</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-label">Database Synchronization:</span>
+                                <span class="diag-value text-lime">Connected (Session Sandbox)</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-label">Active Committee Officers:</span>
+                                <span class="diag-value">12 Registered</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Visual representation of budget -->
+                        <div class="budget-progress-bar-container">
+                            <div class="progress-bar-labels">
+                                <span>Budget Spend Ratio</span>
+                                <span id="budgetPercentLabel">0%</span>
+                            </div>
+                            <div class="progress-bar-rail">
+                                <div id="budgetProgressFill" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- SECTION 2: KANBAN BOARD -->
+            <section id="kanban-section" class="view-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Academic-Synced Kanban Board</h2>
+                        <p class="subtitle">Drag, drop, and cross-balance student workloads during high-velocity academic schedules.</p>
+                    </div>
+                </div>
+                <div class="hell-week-banner" id="hellWeekBanner">
+                    <div class="banner-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div class="banner-content">
+                        <strong>HELL WEEK MODE FORCE-ENGAGED</strong>
+                        <p>Workloads prioritized automatically. Critical tasks flagged as "Academic Risk" are consolidated under Academic Blocked column to prevent student burnout.</p>
+                    </div>
+                </div>
+                <!-- Kanban Matrix Board -->
+                <div class="kanban-board">
+                    
+                    <!-- Backlog Column -->
+                    <div class="kanban-column" id="col-backlog">
+                        <div class="column-header">
+                            <span class="column-title">Backlog</span>
+                            <span class="count count-backlog">0</span>
+                        </div>
+                        <div class="column-body" data-status="backlog">
+                            <!-- Cards inject dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- In Progress Column -->
+                    <div class="kanban-column" id="col-progress">
+                        <div class="column-header">
+                            <span class="column-title">In Progress</span>
+                            <span class="count count-progress">0</span>
+                        </div>
+                        <div class="column-body" data-status="progress">
+                            <!-- Cards inject dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Blocked / Academic At Risk Column -->
+                    <div class="kanban-column column-risk" id="col-blocked">
+                        <div class="column-header">
+                            <span class="column-title">Academic At Risk</span>
+                            <span class="count count-blocked">0</span>
+                        </div>
+                        <div class="column-body" data-status="blocked">
+                            <!-- Cards inject dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Completed Column -->
+                    <div class="kanban-column" id="col-completed">
+                        <div class="column-header">
+                            <span class="column-title">Completed</span>
+                            <span class="count count-completed">0</span>
+                        </div>
+                        <div class="column-body" data-status="completed">
+                            <!-- Cards inject dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Add New Task Form (Admin Restricted Zone) -->
+                <div class="admin-only-action panel-form margin-top-lg">
+                    <div class="panel-form-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                        <h3>Initialize New Committee Deliverable</h3>
+                        <span class="admin-shield">Admin Only</span>
+                    </div>
+                    
+                    <form id="taskForm" class="inline-form">
+                        <div class="form-input-group">
+                            <input type="text" id="taskTitle" placeholder="e.g., Secure permit for amphitheater..." class="form-control" required>
+                        </div>
+                        <div class="form-select-group">
+                            <select id="taskCommittee" class="form-control">
+                                <option value="Logistics">📦 Logistics</option>
+                                <option value="Marketing">📣 Marketing</option>
+                                <option value="Finance">💰 Finance</option>
+                                <option value="Sponsorship">🤝 Sponsorship</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Inject Deliverable</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+            <!-- SECTION 3: RECEIPTS & COMPLIANCE -->
+            <section id="receipts-section" class="view-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Compliance & Cash Tracker</h2>
+                        <p class="subtitle">Log digital transaction confirmations and bundle verification metadata for OSA auditing.</p>
+                    </div>
+                </div>
+                <div class="split-layout">
+                    
+                    <!-- Left: Expense Form -->
+                    <div class="panel-form">
+                        <div class="panel-form-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18.01"></line><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            <h3>Record Expense / Disbursement</h3>
+                        </div>
+                        
+                        <form id="ledgerForm">
+                            <div class="form-group">
+                                <label for="ledgerDesc">Item Description</label>
+                                <input type="text" id="ledgerDesc" class="form-control" placeholder="e.g., Procured 3x5 tarpaulins for orientation booth" required>
+                            </div>
+                            
+                            <div class="form-group row">
+                                <div class="col">
+                                    <label for="ledgerAmount">Amount (PHP)</label>
+                                    <div class="input-currency-wrapper">
+                                        <span class="currency-prefix">₱</span>
+                                        <input type="number" id="ledgerAmount" class="form-control input-amount" placeholder="0.00" min="0.01" step="any" required>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <label for="ledgerRef">GCash/Maya Reference</label>
+                                    <input type="text" id="ledgerRef" class="form-control" placeholder="e.g., 501928492049" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row">
+                                <div class="col">
+                                    <label for="ledgerCommittee">Paying Committee</label>
+                                    <select id="ledgerCommittee" class="form-control">
+                                        <option value="Finance">Finance</option>
+                                        <option value="Logistics">Logistics</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Sponsorship">Sponsorship</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <label for="receiptFile">Upload Receipt Image</label>
+                                    <div class="file-dropzone-wrapper">
+                                        <input type="file" id="receiptFile" class="form-control file-input" accept="image/*">
+                                        <span class="file-label-text">Select Image File...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                <span>Commit Transaction Block</span>
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Right: Verified Ledger Table -->
+                    <div class="panel-ledger">
+                        <div class="ledger-header-actions">
+                            <div class="ledger-title-wrap">
+                                <h3>📜 Verified Ledger Transaction Log</h3>
+                                <p id="ledgerSummaryLabel">0 total entries verified</p>
+                            </div>
+                            <button id="exportLedgerBtn" class="btn btn-secondary btn-sm">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                <span>Export Liquidation Sheet</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Search and Filters Panel -->
+                        <div class="ledger-filters">
+                            <div class="search-box-wrapper">
+                                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="ledgerSearchInput" placeholder="Search by description, committee, or Ref ID..." class="form-control filter-search">
+                            </div>
+                            <div class="filter-select-wrapper">
+                                <select id="ledgerFilterCommittee" class="form-control select-filter">
+                                    <option value="all">All Committees</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Logistics">Logistics</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Sponsorship">Sponsorship</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Data table layout -->
+                        <div class="table-responsive">
+                            <table class="ledger-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ref ID</th>
+                                        <th>Description</th>
+                                        <th>Committee</th>
+                                        <th>Amount</th>
+                                        <th>Receipt Status</th>
+                                        <th class="admin-only-cell">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ledgerBody">
+                                    <!-- Log rows dynamically injected -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- SECTION 4: HERITAGE VAULT -->
+            <section id="vault-section" class="view-section">
+                <div class="section-header">
+                    <div>
+                        <h2>The Heritage Vault</h2>
+                        <p class="subtitle">Preserve static organizational knowledge matrices to ensure a seamless 100% transition handover.</p>
+                    </div>
+                </div>
+                <div class="vault-split">
+                    
+                    <!-- Left: Turnover Checklist and Progress Circle -->
+                    <div class="vault-card">
+                        <div class="vault-card-header">
+                            <div class="header-details">
+                                <h3>🔑 Institutional Turnover Progress</h3>
+                                <p class="card-desc">Mandatory transition markers for outgoing student administration executives.</p>
+                            </div>
+                            <!-- Small dynamic progress label -->
+                            <div class="progress-radial-wrap">
+                                <svg width="50" height="50" viewBox="0 0 36 36" class="circular-chart-sm">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path id="turnoverProgressCircle" class="circle circle-green" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="progress-percentage-label" id="turnoverPercentageText">0%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- List of turnover items -->
+                        <ul class="checklist" id="turnoverChecklist">
+                            <!-- Injected checkboxes -->
+                        </ul>
+                        
+                        <!-- Add turnover item form (Officer/Admin allowed) -->
+                        <form id="addTurnoverItemForm" class="add-turnover-item-form">
+                            <input type="text" id="newTurnoverLabel" placeholder="Add custom turnover objective..." class="form-control" required>
+                            <button type="submit" class="btn btn-secondary btn-sm" title="Add item to turnover checklist">+</button>
+                        </form>
+                    </div>
+                    <!-- Right: Searchable SOP Accordions -->
+                    <div class="vault-card">
+                        <div class="vault-card-header-col">
+                            <h3>📂 Standard Operating Procedures (SOPs)</h3>
+                            <p class="card-desc">Step-by-step administrative framework guides for student organization workflow clearances.</p>
+                            
+                            <!-- Search Bar for SOPs -->
+                            <div class="sop-search-wrapper">
+                                <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="sopSearchInput" placeholder="Filter SOPs by name or keyword..." class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        
+                        <div class="sop-directory" id="sopDirectory">
+                            
+                            <!-- SOP Item 1 -->
+                            <div class="sop-item" data-sop-keywords="finance liquidation audit receipt money gcash bank account payout">
+                                <div class="sop-trigger">
+                                    <div class="sop-title-wrap">
+                                        <span class="folder-icon">📁</span>
+                                        <h4>Finance / Liquidation Protocol</h4>
+                                    </div>
+                                    <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                                <div class="sop-content">
+                                    <div class="sop-body-inner">
+                                        <p>To process clean refunds and payments for suppliers, ensure compliance with the following university directives:</p>
+                                        <ol class="sop-list">
+                                            <li>Always request a valid BIR-registered Official Receipt (OR) for purchases exceeding ₱1,000.</li>
+                                            <li>Disbursements completed via GCash/Maya must have screenshot confirmation containing the 12 or 13-digit Reference Code.</li>
+                                            <li>Consolidate weekly logs in Excel under designated accounts before submitting to the Executive Board Auditor.</li>
+                                            <li>Never log personal items on the organizational budget; audited items require physical inventory verification.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- SOP Item 2 -->
+                            <div class="sop-item" data-sop-keywords="logistics venue sourcing sports center permits reservation physical facility campus">
+                                <div class="sop-trigger">
+                                    <div class="sop-title-wrap">
+                                        <span class="folder-icon">📁</span>
+                                        <h4>University Logistics & Venue Sourcing</h4>
+                                    </div>
+                                    <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                                <div class="sop-content">
+                                    <div class="sop-body-inner">
+                                        <p>Booking guidelines for university facilities (e.g. Amphitheater, Multi-purpose Sports Center, Classrooms):</p>
+                                        <ol class="sop-list">
+                                            <li>Obtain the official Physical Facilities Office (PFO) reservation form.</li>
+                                            <li>Collect safety signatures from both the faculty adviser and the College Dean.</li>
+                                            <li>Submit documents to PFO at least <strong>10 working days</strong> prior to the event date.</li>
+                                            <li>Coordinate with electricity services if extra outlets, projectors, or speaker systems are required.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- SOP Item 3 -->
+                            <div class="sop-item" data-sop-keywords="marketing graphic publications facebook posters publicity design colors guide font">
+                                <div class="sop-trigger">
+                                    <div class="sop-title-wrap">
+                                        <span class="folder-icon">📁</span>
+                                        <h4>Marketing & Graphic Design Publication Policies</h4>
+                                    </div>
+                                    <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
+                                <div class="sop-content">
+                                    <div class="sop-body-inner">
+                                        <p>Guidance to maintain visual cohesion across social media profiles and print media:</p>
+                                        <ol class="sop-list">
+                                            <li>Always employ the official brand fonts (Outfit and Space Grotesk).</li>
+                                            <li>Include the official organization transparent watermark in the upper right corner of all pubmats.</li>
+                                            <li>Ensure alternative text descriptions (alt text) are attached to Facebook and Instagram publications for accessibility.</li>
+                                            <li>Publicity materials mentioning university partners require explicit written sign-off from the Sponsorship Committee.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <!-- Core Javascript Code module -->
+    <script src="app.js"></script>
+</body>
+</html>
